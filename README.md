@@ -1,1 +1,1 @@
-Model Fitting and Imaging WGs Submission Comparison Pipeline
+Model Fitting and Imaging WGs Submission Comparison Pipeline -- Event Horizon Telescope
