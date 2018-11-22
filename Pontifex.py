@@ -66,6 +66,9 @@ class AnalysisObject(object):
     def pix_to_uas(self, pix):
         return pix*(self.image.psize/eh.RADPERUAS)
 
+    def uas_to_pix(self, uas):
+        return uas/(self.image.psize/eh.RADPERUAS)
+
     def get_radius_FLUX_METHOD(self):
         shadow_estimate, error = get_shadow_size_from_image(self.image, 
                                                             interval=self.parameters['intervals'], 
@@ -132,6 +135,58 @@ class AnalysisObject(object):
         im_array = base_image.align_images(im_array)[0]
         self.image = im_array[0]
 
+
+    ### function attributes specific to the model comparison pipeline ###
+    def get_asymmetry(self):
+        x, y = iterative_shadow_estimate(self.image, iterations=self.parameters['iterations'], display=False, interval=self.parameters['intervals'], scale=self.scale)
+        self.points['xcoord'] = x
+        self.points['ycoord'] = y
+        diameters = []
+        for idx, x in enumerate(self.points['xcoord']):
+            max_dist = 0
+            start_point = (x, self.points['ycoord'][idx])
+            for e_idx, e_x in enumerate(self.points['xcoord']):
+                end_point = (e_x, self.points['ycoord'][e_idx])
+                dist = get_distance_between_two_points(start_point[0], start_point[1], end_point[0], end_point[1])
+                if dist > max_dist:
+                    max_dist = dist
+                else:
+                    continue
+            diameters.append(max_dist)
+
+        return np.std(diameters)
+
+    def get_mean_width(self):
+        widths = []
+        for theta in np.linspace(0, 2*np.pi, self.intervals):
+            (c, e) = Hyperion.get_horizontal_peaks(self.image, angle=theta, return_error=True)
+            widths.append(e)
+        return np.median(widths)
+
+
+    def get_flux_inside_radius(self):
+        r = self.uas_to_pix(self.radius_dictionary['combined'])
+        center = self.centers['combined']
+        h = self.image.xdim
+        w = self.image.ydim
+        mask = create_circular_mask(h, w, center=center, radius=r)
+
+        masked_img = self.image.imvec.reshape((h, w)).copy()
+        masked_img[~mask] = 0
+
+        return np.sum(masked_img) / np.sum(self.image.imvec)
+
+    def get_flux_outside_radius(self):
+        r = self.uas_to_pix(self.radius_dictionary['combined'])
+        center = self.centers['combined']
+        h = self.image.xdim
+        w = self.image.ydim
+        mask = create_circular_mask(h, w, center=center, radius=r)
+
+        masked_img = self.image.imvec.reshape((h, w)).copy()
+        masked_img[mask] = 0
+
+        return np.sum(masked_img) / np.sum(self.image.imvec)
 
 
 # Functions #################################
@@ -220,7 +275,7 @@ def get_non_colinear_orthocenter(im, npoints=10, points_tuple=False, return_r=Fa
         if x >= int((im.xdim/2.)-lftrng*im.xdim) and x < int((im.xdim/2.)+lftrng*im.xdim) and y > int((im.ydim/2.)-rtrng*im.ydim) and y <= int((im.ydim/2.)+rtrng*im.ydim):
             points_to_delete.append(i)
 
-    print "DELETING {0} BAD POINTS".format(len(points_to_delete))
+    print_verbose("DELETING {0} BAD POINTS".format(len(points_to_delete)))
     for i, point in enumerate(points_to_delete):
         del global_xs[point-i]
         del global_ys[point-i]
@@ -289,7 +344,7 @@ def get_non_colinear_orthocenter(im, npoints=10, points_tuple=False, return_r=Fa
     #     A = points_permutations[idx][0]
     #     r.append(np.linalg.norm(np.asarray(A)-np.asarray([float(cx), float(cy)])))
 
-    print "CENTER:", float(np.median(cx_sum)), float(np.median(cy_sum))
+    # print_verbose( "CENTER:"float(np.median(cx_sum)), float(np.median(cy_sum)))
     # print "CENTER:", float(cx/npoints), float(cy/npoints)
     if return_r:
         return np.median(r)
@@ -648,3 +703,19 @@ def iterative_shadow_estimate(im, iterations=1, display=True, interval=75, scale
     ## return final shadow size
     return shadows[np.where(corr_errors == np.min(corr_errors))[-1][-1]]
 
+
+
+### functions specific to the model comparison pipeline ###
+
+def create_circular_mask(h, w, center=None, radius=None):
+
+    if center is None: # use the middle of the image
+        center = [int(w/2), int(h/2)]
+    if radius is None: # use the smallest distance between the center and image walls
+        radius = min(center[0], center[1], w-center[0], h-center[1])
+
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+
+    mask = dist_from_center <= radius
+    return mask
