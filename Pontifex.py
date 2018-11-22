@@ -335,7 +335,7 @@ def get_non_colinear_orthocenter(im, npoints=10, points_tuple=False, return_r=Fa
             continue
         break
 
-        # print np.linalg.norm(np.asarray(A)-np.asarray([float(cx_sum/k), float(cy_sum/k)]))
+        # print np.linalg.norm(np.asarray(A-)cannp.asarray([float(cx_sum/k), float(cy_sum/k)]))
 
     cx = float(np.median(cx_sum))
     cy = float(np.median(cy_sum))
