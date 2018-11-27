@@ -206,7 +206,7 @@ def get_inner_circle(image, rx, ry, thresh=0.0):
 
     return (inner_cx, inner_cy, radiusx, radiusy)
 
-def get_horizontal_peaks(image, thresh=0.0, get_center=True, angle=0, flux_thresh = 0.0, ring_thresh=0.0, return_error=False):
+def get_horizontal_peaks(image, thresh=0.0, get_center=True, angle=0, flux_thresh = 0.0, ring_thresh=0.0, return_error=False, return_center_row=False):
     """ 
         get a single horizontal peak flux from 
         two sides of a centerpoint
@@ -246,6 +246,8 @@ def get_horizontal_peaks(image, thresh=0.0, get_center=True, angle=0, flux_thres
 
     # extract the row and column using splicing
     center_row = vec[CENTER_X,:]
+    if return_center_row:
+        return center_row
     center_col = vec[:,CENTER_Y]
     print_verbose("row")
     print_verbose(center_row)

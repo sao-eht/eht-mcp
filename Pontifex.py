@@ -62,6 +62,14 @@ class AnalysisObject(object):
             'npoints':self.intervals,
             'iterations':0
         }
+        self.intensityProfiles = {
+            0:Hyperion.get_horizontal_peaks(image, return_center_row=True),
+            1:Hyperion.get_horizontal_peaks(image, angle= np.pi/2., return_center_row=True),
+            2:Hyperion.get_horizontal_peaks(image, angle= np.pi, return_center_row=True),
+            3:Hyperion.get_horizontal_peaks(image, angle= 3*np.pi/2., return_center_row=True)
+        }
+
+
 
     def pix_to_uas(self, pix):
         return pix*(self.image.psize/eh.RADPERUAS)
@@ -187,6 +195,8 @@ class AnalysisObject(object):
         masked_img[mask] = 0
 
         return np.sum(masked_img) / np.sum(self.image.imvec)
+
+
 
 
 # Functions #################################
@@ -521,7 +531,10 @@ def FWHM(X,Y):
     # plt.show()
     #find the left and right most indexes
     left_idx = np.where(d > 0)[0][0]
-    right_idx = np.where(d < 0)[-1][0]
+    try:
+        right_idx = np.where(d < 0)[-1][0]
+    except IndexError:
+        right_idx = len(Y) - 1
     # print left_idx
     # print right_idx
     return (X[right_idx] - X[left_idx])/2. #return the difference (full width)
