@@ -196,7 +196,7 @@ class AnalysisObject(object):
 
         return np.sum(masked_img) / np.sum(self.image.imvec)
 
-
+    ### end function attributes specific to the model comparison pipeline ###
 
 
 # Functions #################################

@@ -96,3 +96,5 @@ Next, make the following changes to `eht-mcp.ipynb`:
 5) Test the pipeline locally using `sample_data/` and make sure it works, at least on the base case. 
 
 6) Open a pull request on Github from your fork, and request a branch merge with master.
+
+
