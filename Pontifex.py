@@ -169,6 +169,8 @@ class AnalysisObject(object):
         for theta in np.linspace(0, 2*np.pi, self.intervals):
             (c, e) = Hyperion.get_horizontal_peaks(self.image, angle=theta, return_error=True)
             widths.append(e)
+        print widths
+        print np.median(widths)
         return np.median(widths)
 
 
