@@ -32,7 +32,7 @@ The pipeline analyzes images only in order to provide a uniform understanding of
 
   1) The **file type** must be `.fits`. 
 
-  2) The FITS header must include the **size of a pixel in the x direction** in microarcseconds, stored in `CDELT1` keyword, and the **size of a pixel in the y direction** in microarcseconds, stored in `CDELT2` keyword. 
+  2) The FITS header must include the **size of a pixel in the x direction** in microarcseconds, stored in `CDELT1` keyword, and the **size of a pixel in the y direction** in microarcseconds, stored in `CDELT2` keyword. The header must also include `NAXIS1` and `NAXIS2` for the x- and y- dimensions of the image in pixels.
 
   3) It would be very helpful if some **padding of the field of view** is included, to facilitate the estimation of some ring metrics (especially sharpness, orientation, and flux distribution).
 
