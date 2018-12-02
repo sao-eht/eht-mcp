@@ -45,7 +45,7 @@ All files must use the below name convention. The general format is:
 ```
 
  * `Lastname`, `Firstname` (self explanatory) ex: `JohnsonMichael`
- * `ExtraInfo` -- submitting multiple model fits? distinguish them here. ex: `LL` or `HOPS`
+ * `ExtraInfo` -- submitting multiple model fits? distinguish them here. ex: `LL` or `HOPS` **DO NOT USE EXTRA SPACING CHARACTERS** (ex. /, -, _, .,). Please keep everything camelCase.
  * `YYMMDD`, date of SUBMISSION (e.g. November 8th, 2018 becomes `181108`)
  * `ID`, dataset ID unique to each challenge. For the first challenge, this tag is: `WCROMH`. See: https://docs.google.com/spreadsheets/d/11oCD7T6okr3iRfJjvlFesowY3O8QLhv87HbOpP79v3c/edit?usp=sharing
 
