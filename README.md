@@ -32,7 +32,7 @@ The pipeline analyzes images only in order to provide a uniform understanding of
 
   1) The **file type** must be `.fits`. 
 
-  2) The FITS header must include the **size of a pixel in the x direction** in microarcseconds, stored in `CDELT1` keyword, and the **size of a pixel in the y direction** in microarcseconds, stored in `CDELT2` keyword. 
+  2) The FITS header must include the **size of a pixel in the x direction** in radians, stored in `CDELT1` keyword, and the **size of a pixel in the y direction** in radians, stored in `CDELT2` keyword. The header must also include `NAXIS1` and `NAXIS2` for the x- and y- dimensions of the image in pixels.
 
   3) It would be very helpful if some **padding of the field of view** is included, to facilitate the estimation of some ring metrics (especially sharpness, orientation, and flux distribution).
 
@@ -45,7 +45,7 @@ All files must use the below name convention. The general format is:
 ```
 
  * `Lastname`, `Firstname` (self explanatory) ex: `JohnsonMichael`
- * `ExtraInfo` -- submitting multiple model fits? distinguish them here. ex: `LL` or `HOPS`
+ * `ExtraInfo` -- submitting multiple model fits? distinguish them here. ex: `LL` or `HOPS` **DO NOT USE EXTRA SPACING CHARACTERS** (ex. /, -, _, .,). Please keep everything camelCase.
  * `YYMMDD`, date of SUBMISSION (e.g. November 8th, 2018 becomes `181108`)
  * `ID`, dataset ID unique to each challenge. For the first challenge, this tag is: `WCROMH`. See: https://docs.google.com/spreadsheets/d/11oCD7T6okr3iRfJjvlFesowY3O8QLhv87HbOpP79v3c/edit?usp=sharing
 
