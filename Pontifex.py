@@ -178,8 +178,11 @@ class AnalysisObject(object):
     def get_mean_width(self):
         widths = []
         for theta in np.linspace(0, 2*np.pi, self.intervals):
-            (c, e) = Hyperion.get_horizontal_peaks(self.image, angle=theta, return_error=True)
-            widths.append(e)
+            try:
+                (c, e) = Hyperion.get_horizontal_peaks(self.image, angle=theta, return_error=True)
+                widths.append(e)
+            except:
+                widths.append(0)
         print widths
         print np.median(widths)
         return np.median(widths)
