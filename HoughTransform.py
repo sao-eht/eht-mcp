@@ -158,7 +158,7 @@ class HoughTransform(object):
             self.dist_threshold = np.max(self.accumulator)
         
         print "MAX", np.max(self.accumulator)
-        locs = np.where(self.accumulator >= np.max(self.accumulator))
+        locs = np.where(self.accumulator >= np.max(self.accumulator)/2.)
 
         # plt.hist2d(locs[0], locs[1], bins=5)
         # plt.imshow(self.accumulator)
@@ -174,7 +174,7 @@ class HoughTransform(object):
             fig = matplotlib.figure.Figure()
             ax = matplotlib.axes.Axes(fig, (0,0,0,0))
             binwidth = (param_set[3]-param_set[2])/100.
-            print np.linspace(param_set[2], param_set[3], param_set[1])[locs[idx]]
+            # print np.linspace(param_set[2], param_set[3], param_set[1])[locs[idx]]
             n, bins, patches = ax.hist(np.linspace(param_set[2], param_set[3], param_set[1])[locs[idx]], bins=100, density=True)#np.arange(param_set[2], param_set[3] + binwidth, binwidth))
             del ax, fig
             (mu, sigma) = norm.fit(np.linspace(param_set[2], param_set[3], param_set[1])[locs[idx]])
@@ -228,9 +228,10 @@ class HoughTransform(object):
             thread.start_new_thread( self.iterate_permutations, (point, chunk, (len(chunk[0])*idx)-1) )
             # self.iterate_permutations(point, chunk, const=threads*idx)
 
+# Functions #################################
+
 def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
 
-# Functions #################################
 
