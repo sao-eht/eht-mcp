@@ -4,8 +4,10 @@
 import glob
 import math
 import copy
+import random
 import numpy as np 
 import ehtim as eh
+import HoughTransform
 import matplotlib.pyplot as plt 
 from scipy.signal import argrelextrema
 from matplotlib.patches import Ellipse
@@ -138,11 +140,49 @@ def get_inner_circle(image, rx, ry, thresh=0.0):
             (cx, cy, rx, ry): the center coordinates and radii
     """
 
+
+    def paramshadow(x,y, h, k, r):
+        return (((x-h)**2) + ((y-k)**2)) - r**2
+    testIm = image
+    imvecArray = testIm.imvec.reshape(testIm.xdim, testIm.ydim)
+    gradientImvecArray = np.gradient(imvecArray)
+    grad = (gradientImvecArray[0]**2 + gradientImvecArray[1]**2)**0.5
+    locs = np.where(grad > np.max(grad)/2.)
+
+    rslocs = [[], []]
+    numPoints = 10
+    for i in range(numPoints):
+        rIdx = random.choice(range(len(locs[1])))
+        rslocs[0].append(locs[0][rIdx])
+        rslocs[1].append(locs[1][rIdx])
+
+    resolution=20
+
+    HoughTransformObject = HoughTransform.HoughTransform((rslocs[0], rslocs[1]), 
+                [
+                    ('h', resolution, float(np.min(rslocs[0])), float(np.max(rslocs[0]))), 
+                    ('k', resolution, float(np.min(rslocs[1])), float(np.max(rslocs[1]))), 
+                    ('r', resolution, 0.0, float(np.max(locs[0]) - np.min(locs[0] )))
+                ], 
+                paramshadow
+            )
+
+    res = HoughTransformObject.get_estimation(threaded='single', title=r'\textbf{Est. of center (h,k) and radius (r) in pixels}', show=False)
+
+    cx = res[0][0]
+    cy = res[1][0]
+    rx = (testIm.psize/eh.RADPERUAS)*res[2][0]
+    ry = (testIm.psize/eh.RADPERUAS)*res[2][0]
+
+    if testIm.psize > 1e-6: 
+        rx *= eh.RADPERUAS*(1/0.0174532925199)
+        ry *= eh.RADPERUAS*(1/0.0174532925199)
+    return (cx, cy, rx, ry)
+
     ''' sanitize input '''
     thresh = float(thresh)
     print_verbose("Threshold set to {0}".format(thresh))
     im = image
-    
 
     ''' get center of image '''
     (CENTER_X, CENTER_Y) = get_center_from_matrix(im.imvec, thresh)
@@ -170,16 +210,27 @@ def get_inner_circle(image, rx, ry, thresh=0.0):
                 order=100-i
             )
             a=  col_peaks[0][1]
+            break
         except IndexError:
             continue
         break
 
+
+    plt.plot(center_col)
+    plt.show()
     col_peak_val = np.asarray([center_col[i] for i in col_peaks[0]])
 
     small_idx = col_peak_val.argsort()[:1]
+    oldmslidx = small_idx
+    if len(small_idx) == 0:
+        small_idx = center_col.argsort()[-3:][::-1]
+        inner_cy = small_idx[0]
     # print "smidx", small_idx
     print col_peaks
-    inner_cy = col_peaks[0][small_idx[0]]
+
+    if len(oldmslidx) != 0:
+        inner_cy = col_peaks[0][small_idx[0]]
+    print inner_cy
     # print "innercy", inner_cy
     center_row = vec[:,inner_cy]
 
@@ -197,6 +248,13 @@ def get_inner_circle(image, rx, ry, thresh=0.0):
     # print 'row peaks', row_peaks
     row_peak_val = np.asarray([center_row[i] for i in row_peaks[0]])
     small_idx = row_peak_val.argsort()[:1]
+    oldmslidx = small_idx
+    if len(small_idx) == 0:
+        small_idx = center_row.argsort()[-3:][::-1]
+        inner_cx = small_idx[0]
+
+    if len(oldmslidx) != 0:
+        inner_cx = col_peaks[0][small_idx[0]]
     # print len(small_idx)
     inner_cx = row_peaks[0][small_idx[0]]
     # print "cx", inner_cx
@@ -281,7 +339,13 @@ def get_horizontal_peaks(image, thresh=0.0, get_center=True, angle=0, flux_thres
     # plt.xlabel('Position (pixels)')
     # plt.ylabel('Intensity')
     # # # plt.plot(new_i)
-    plt.plot(center_row)
+    pltcenrow = np.array(center_row)
+    pltcenrow[np.where(pltcenrow < np.max(center_row)*0.05)] = 0
+    if len(center_row) > 100: pltcenrow = np.trim_zeros(pltcenrow)
+    plt.plot(pltcenrow/np.max(pltcenrow))
+    plt.xlabel("Radius along intensity profile")
+    plt.ylabel("Normalized intensity")
+    plt.title("Radial cross sectional intensity profiles")
     # plt.savefig("_WEIGHTED{0}.png".format(str(float((angle/math.pi)*35.))))
     # plt.clf()
     # plt.show()

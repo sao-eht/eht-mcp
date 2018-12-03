@@ -41,7 +41,8 @@ class AnalysisObject(object):
             'fluxcenter':0,
             'circumcenter':0,
             'combined':0,
-            'longdist':0
+            'longdist':0,
+            'hough':0,
         }
         self.error_dictionary = {
             'systematic':0,
@@ -72,10 +73,20 @@ class AnalysisObject(object):
 
 
     def pix_to_uas(self, pix):
+        if self.image.psize > 1e-6: 
+            return pix*(self.image.psize)*(1/0.0174532925199)
+        
         return pix*(self.image.psize/eh.RADPERUAS)
 
     def uas_to_pix(self, uas):
         return uas/(self.image.psize/eh.RADPERUAS)
+
+
+    def get_radius_hough_transform(self):
+        radius = Hyperion.get_inner_circle(self.image, 0, 0)[2]
+        print "ESTIMATED RADIUS", radius
+        self.radius_dictionary['hough'] = radius
+        return radius
 
     def get_radius_FLUX_METHOD(self):
         shadow_estimate, error = get_shadow_size_from_image(self.image, 
