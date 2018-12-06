@@ -14,7 +14,7 @@
  * [`eht-imaging`](https://github.com/achael/eht-imaging), which form the file IO backbone of the pipeline
  * [`PontiFEX` and `Hyperion`](https://github.com/sao-eht/pontifex), which form the feature extraction backbone of the pipeline
  * [Challenge ID database](https://docs.google.com/spreadsheets/d/11oCD7T6okr3iRfJjvlFesowY3O8QLhv87HbOpP79v3c/edit?usp=sharing), used for naming your files!
- * [Frequently update documentation of metrics used.](https://github.com/sao-eht/eht-mcp/blob/master/docs/eht-mcp_metric_descriptions.pdf)
+ * [Frequently updated documentation of metrics used.](https://github.com/sao-eht/eht-mcp/blob/master/docs/eht-mcp_metric_descriptions.pdf)
 ## How do I submit an image to the pipeline?
 Each challenge will have its own ID, folder and output within the pipeline. To submit your image for comparison and analysis...
 
