@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[letterpaper, portrait, margin=0.75in]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\graphicspath{'./'}
+
+\title{\texttt{eht-mcp}: Metric Descriptions}
+\author{ Joseph Farah, SAO}
+
+\begin{document}
+\maketitle
+
+\abstract{The Event Horizon Telescope model comparison pipeline (\texttt{eht-mcp}) uses image-domain feature extraction to compare how images/models compare with each other. The following is a brief description of the way each of the current metrics are calculated.}
+
+\section{Metric Descriptions}
+\begin{enumerate}
+	\item \textbf{Radius/Center}: the radius/center of the ring in a model/image is computed using a Hough accumulator. The parameter space $(h, k, r)$, defined using the following formula:
+\[ (x-h)^2 + (y-k)^2 - r^2 = 0 \]	
+	is explored using the Python \texttt{HoughTransform} library, developed internally but soon to be distributed via \texttt{pip}. The peaks in the Hough accumulator are used as the fit results.
+	\item \textbf{Width}: The width of the ring is defined by the bumps in the intensity profiles. Once a center is determined using the Hough transform, radial profiles are constructed at regular arbitrary angles around the image. Each profile has a characteristic bump denoting where the ring intersects the cross section. A Gaussian distribution is fit to each bump, and the width is the mean full width half max/standard deviation of those Gaussians (we can pick which metric we like, FWHM vs $\sigma$, but there's only a factor of 2.235 separating them.)
+	\item \textbf{Asymmetry}: Individual radii are measured across the cross sections, using the peaks of the bumps as the radius measurement. Once a series of radial points has been constructed, ideally representing the ring, the diameter of the farthest point from each point is computed. The standard deviation of these diameters is the asymmetry.
+	\item \textbf{Flux inside/outside/in the ring}: more to come
+	\item \textbf{Sharpness}: From each of the Gaussian profiles computed in the width, a ratio of maximum intensity to standard deviation is constructed. The median of this distribution is the sharpness.
+\end{enumerate}
+
+\section{Visual description}
+
+
+
+\end{document}
