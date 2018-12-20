@@ -158,7 +158,7 @@ class HoughTransform(object):
             self.dist_threshold = np.max(self.accumulator)
         
         print "MAX", np.max(self.accumulator)
-        locs = np.where(self.accumulator >= np.max(self.accumulator)/2.)
+        locs = np.where(self.accumulator >= np.max(self.accumulator)*0.2)
 
         # plt.hist2d(locs[0], locs[1], bins=5)
         # plt.imshow(self.accumulator)

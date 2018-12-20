@@ -140,9 +140,6 @@ def get_inner_circle(image, rx, ry, thresh=0.0):
             (cx, cy, rx, ry): the center coordinates and radii
     """
 
-
-    def paramshadow(x,y, h, k, r):
-        return (((x-h)**2) + ((y-k)**2)) - r**2
     testIm = image
     imvecArray = testIm.imvec.reshape(testIm.xdim, testIm.ydim)
     gradientImvecArray = np.gradient(imvecArray)
@@ -158,10 +155,14 @@ def get_inner_circle(image, rx, ry, thresh=0.0):
 
     resolution=20
 
+    (cx, cy) = get_non_colinear_orthocenter(testIm, npoints=len(locs)/10, points_tuple=(list(locs[0]), list(locs[1])), return_r=False)
+    print "CENTER:", cx, cy
+
+    def paramshadow(x,y, r):
+        return (((x-cx)**2) + ((y-cy)**2)) - r**2
+
     HoughTransformObject = HoughTransform.HoughTransform((rslocs[0], rslocs[1]), 
-                [
-                    ('h', resolution, float(np.min(rslocs[0])), float(np.max(rslocs[0]))), 
-                    ('k', resolution, float(np.min(rslocs[1])), float(np.max(rslocs[1]))), 
+                [ 
                     ('r', resolution, 0.0, float(np.max(locs[0]) - np.min(locs[0] )))
                 ], 
                 paramshadow
@@ -169,10 +170,10 @@ def get_inner_circle(image, rx, ry, thresh=0.0):
 
     res = HoughTransformObject.get_estimation(threaded='single', title=r'\textbf{Est. of center (h,k) and radius (r) in pixels}', show=False)
 
-    cx = res[0][0]
-    cy = res[1][0]
-    rx = (testIm.psize/eh.RADPERUAS)*res[2][0]
-    ry = (testIm.psize/eh.RADPERUAS)*res[2][0]
+    # cx = res[0][0]
+    # cy = res[1][0]
+    rx = (testIm.psize/eh.RADPERUAS)*res[0][0]
+    ry = (testIm.psize/eh.RADPERUAS)*res[0][0]
 
     if testIm.psize > 1e-6: 
         rx *= eh.RADPERUAS*(1/0.0174532925199)
@@ -626,3 +627,116 @@ def find_fwhm(peak_big, peak_small, row):
     print "rerr", rerror
 
     return ((lerror+rerror)/(2.)) # https://en.wikipedia.org/wiki/Full_width_at_half_maximum
+
+
+def get_non_colinear_orthocenter(im, npoints=10, points_tuple=False, return_r=False):
+    global_xs = []
+    global_ys = []
+    global_error = []
+
+    # plt.imshow(im.imvec.reshape(im.xdim, im.ydim))
+    # plt.show()
+    # raw_input()
+    if points_tuple is False:
+        interv = npoints
+        for i in range(0,int(interv)+3):
+            angle = 2*i*pi/float(int(interv))
+            # print "ANGLE: ", angle/pi
+            (xs, ys), error = get_single_point_max(im, angle=angle, get_center=(cx,cy), flux_thresh=0.1, ring_thresh=0.0, return_error=True, bounds=False)
+            if xs == False:
+                return False, False
+            global_error.append(error)
+            for x in xs:
+                global_xs.append(x)
+            for y in ys:
+                global_ys.append(y)
+
+    if points_tuple:
+        global_xs = points_tuple[0]
+        global_ys = points_tuple[1]
+
+    lftrng = 0.05
+    rtrng = 0.05
+    points_to_delete = []
+    for i, x in enumerate(global_xs):
+        x = x
+        y = global_ys[i]
+        if x >= int((im.xdim/2.)-lftrng*im.xdim) and x < int((im.xdim/2.)+lftrng*im.xdim) and y > int((im.ydim/2.)-rtrng*im.ydim) and y <= int((im.ydim/2.)+rtrng*im.ydim):
+            points_to_delete.append(i)
+
+    print_verbose("DELETING {0} BAD POINTS".format(len(points_to_delete)))
+    for i, point in enumerate(points_to_delete):
+        del global_xs[point-i]
+        del global_ys[point-i]
+
+    cx_sum, cy_sum, r = [], [], []
+    points_permutations, chi_squares = [], []
+
+    for k in range(1,npoints+1):
+        ## select three points at random
+        choices = range(0, len(global_xs)-1)
+        indices = []
+
+        for i in range(3):
+            idx = random.choice(choices)
+            indices.append(idx)
+            choices.remove(idx)
+
+        ## get the three points
+        A = [global_xs[indices[0]], global_ys[indices[0]]]
+        B = [global_xs[indices[1]], global_ys[indices[1]]]
+        C = [global_xs[indices[2]], global_ys[indices[2]]]
+
+        points_permutations.append([A, B, C])
+        chi_squares.append(get_linearity([A, B, C]))
+
+    print chi_squares
+    max_indices = np.argsort(chi_squares)[5:]
+    # print chi_squares
+    # print np.where(chi_squares == np.max(chi_squares))
+    # print max_indices
+    # raw_input()
+    k = 0
+    while 1:
+        k+=1
+        try:
+            for idx in max_indices:
+                A = points_permutations[idx][0]
+                B = points_permutations[idx][1]
+                C = points_permutations[idx][2]
+
+                D = 2*( A[0]*(B[1]-C[1]) + B[0]*(C[1] - A[1]) + C[0]*(A[1] - B[1]))
+                # print D
+
+                cx = int((1./D)*((A[0]**2 + A[1]**2)*(B[1] - C[1]) +  (B[0]**2 +B[1]**2)*(C[1] - A[1]) +  (C[0]**2 + C[1]**2)*(A[1] - B[1])))
+
+                cy = int((1./D)*((A[0]**2 + A[1]**2)*(C[0] - B[0]) +  (B[0]**2 +B[1]**2)*(A[0] - C[0]) +  (C[0]**2 + C[1]**2)*(B[0] - A[0])))
+
+                cx_sum.append(cx)
+                cy_sum.append(cy)
+                r.append(np.linalg.norm(np.asarray(A)-np.asarray([float(cx), float(cy)])))
+        except ValueError:
+            print "VALUEERROR"
+            if k >= 10: break
+            continue
+        except OverflowError:
+            print "VALUEERROR"
+            if k >= 10: break
+            continue
+        break
+
+        # print np.linalg.norm(np.asarray(A-)cannp.asarray([float(cx_sum/k), float(cy_sum/k)]))
+
+    cx = float(np.median(cx_sum))
+    cy = float(np.median(cy_sum))
+
+    # for idx in max_indices:
+    #     A = points_permutations[idx][0]
+    #     r.append(np.linalg.norm(np.asarray(A)-np.asarray([float(cx), float(cy)])))
+
+    # print_verbose( "CENTER:"float(np.median(cx_sum)), float(np.median(cy_sum)))
+    # print "CENTER:", float(cx/npoints), float(cy/npoints)
+    if return_r:
+        return np.median(r)
+
+    return float(np.median(cx)), float(np.median(cy))

@@ -274,19 +274,19 @@ def get_non_colinear_orthocenter(im, npoints=10, points_tuple=False, return_r=Fa
     # plt.imshow(im.imvec.reshape(im.xdim, im.ydim))
     # plt.show()
     # raw_input()
-
-    interv = 75
-    for i in range(0,int(interv)+3):
-        angle = 2*i*pi/float(int(interv))
-        # print "ANGLE: ", angle/pi
-        (xs, ys), error = get_single_point_max(im, angle=angle, get_center=(cx,cy), flux_thresh=0.1, ring_thresh=0.0, return_error=True, bounds=False)
-        if xs == False:
-            return False, False
-        global_error.append(error)
-        for x in xs:
-            global_xs.append(x)
-        for y in ys:
-            global_ys.append(y)
+    if points_tuple is False:
+        interv = npoints
+        for i in range(0,int(interv)+3):
+            angle = 2*i*pi/float(int(interv))
+            # print "ANGLE: ", angle/pi
+            (xs, ys), error = get_single_point_max(im, angle=angle, get_center=(cx,cy), flux_thresh=0.1, ring_thresh=0.0, return_error=True, bounds=False)
+            if xs == False:
+                return False, False
+            global_error.append(error)
+            for x in xs:
+                global_xs.append(x)
+            for y in ys:
+                global_ys.append(y)
 
     if points_tuple:
         global_xs = points_tuple[0]
@@ -327,6 +327,7 @@ def get_non_colinear_orthocenter(im, npoints=10, points_tuple=False, return_r=Fa
         points_permutations.append([A, B, C])
         chi_squares.append(get_linearity([A, B, C]))
 
+    print chi_squares
     max_indices = np.argsort(chi_squares)[5:]
     # print chi_squares
     # print np.where(chi_squares == np.max(chi_squares))
